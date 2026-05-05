@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: host-management-openstack
+    app.kubernetes.io/managed-by: kustomize
+  name: manager-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["osac.openshift.io"]
+  resources: ["hostleases"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["osac.openshift.io"]
+  resources: ["hostleases/status"]
+  verbs: ["get", "update", "patch"]

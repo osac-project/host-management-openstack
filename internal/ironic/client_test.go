@@ -17,6 +17,7 @@ limitations under the License.
 package ironic_test
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -106,7 +107,7 @@ var _ = Describe("Client", func() {
 			})
 
 			It("should return an error when no credentials are available", func() {
-				client, err := ironic.NewClient()
+				client, err := ironic.NewClient(context.Background())
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("failed to create baremetal client"))
 				Expect(client).To(BeNil())
@@ -121,14 +122,14 @@ var _ = Describe("Client", func() {
 			})
 
 			It("should create a client successfully", func() {
-				client, err := ironic.NewClient()
+				client, err := ironic.NewClient(context.Background())
 				Expect(err).NotTo(HaveOccurred())
 				Expect(client).NotTo(BeNil())
 				Expect(client.GetEndpoint()).NotTo(BeEmpty())
 			})
 
 			It("should have a non-empty endpoint", func() {
-				client, err := ironic.NewClient()
+				client, err := ironic.NewClient(context.Background())
 				Expect(err).NotTo(HaveOccurred())
 
 				endpoint := client.GetEndpoint()
@@ -145,7 +146,7 @@ var _ = Describe("Client", func() {
 		})
 
 		It("should return a valid HTTP(S) endpoint", func() {
-			client, err := ironic.NewClient()
+			client, err := ironic.NewClient(context.Background())
 			Expect(err).NotTo(HaveOccurred())
 
 			endpoint := client.GetEndpoint()

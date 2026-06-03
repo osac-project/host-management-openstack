@@ -17,12 +17,14 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -233,7 +235,9 @@ func main() {
 
 	// Ironic client for bare metal management
 	var ironicClient *ironic.Client
-	if ironicClient, err = ironic.NewClient(); err != nil {
+	ironicCtx, ironicCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer ironicCancel()
+	if ironicClient, err = ironic.NewClient(ironicCtx); err != nil {
 		setupLog.Error(err, "failed to create Ironic client")
 		os.Exit(1)
 	}

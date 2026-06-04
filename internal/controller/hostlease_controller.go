@@ -123,8 +123,10 @@ func (r *HostLeaseReconciler) handleUpdate(ctx context.Context, hostLease *v1alp
 	if !controllerutil.ContainsFinalizer(hostLease, hostLeaseFinalizer) {
 		controllerutil.AddFinalizer(hostLease, hostLeaseFinalizer)
 		if err := r.Update(ctx, hostLease); err != nil {
+			hostLease.Status.Phase = v1alpha1.HostLeasePhaseFailed
 			return ctrl.Result{}, err
 		}
+		hostLease.Status.Phase = v1alpha1.HostLeasePhaseProgressing
 		return ctrl.Result{Requeue: true}, nil
 	}
 
@@ -136,6 +138,7 @@ func (r *HostLeaseReconciler) handleUpdate(ctx context.Context, hostLease *v1alp
 			return result, provErr
 		}
 		if !result.IsZero() {
+			hostLease.Status.Phase = v1alpha1.HostLeasePhaseProgressing
 			return result, nil
 		}
 	}
@@ -167,8 +170,16 @@ func (r *HostLeaseReconciler) handleUpdate(ctx context.Context, hostLease *v1alp
 	if hostLease.Spec.PoweredOn != nil {
 		currentlyOn := node.PowerState == ironic.PowerOn.String()
 		if *hostLease.Spec.PoweredOn != currentlyOn {
+			hostLease.Status.Phase = v1alpha1.HostLeasePhaseProgressing
 			return ctrl.Result{RequeueAfter: r.RecheckInterval}, nil
 		}
+	}
+
+	provisionCond := hostLease.GetStatusCondition(v1alpha1.HostConditionProvisionTemplateComplete)
+	if provisionCond != nil && provisionCond.Status != metav1.ConditionTrue {
+		hostLease.Status.Phase = v1alpha1.HostLeasePhaseFailed
+		log.Info("HostLease not ready: provision template not complete", "hostLease", hostLease.Name)
+		return ctrl.Result{}, nil
 	}
 
 	hostLease.Status.Phase = v1alpha1.HostLeasePhaseReady

@@ -345,7 +345,29 @@ func (r *HostLeaseReconciler) reconcilePower(ctx context.Context, hostLease *v1a
 }
 
 func (r *HostLeaseReconciler) reconcileProvisioning(ctx context.Context, hostLease *v1alpha1.HostLease) (ctrl.Result, error) {
-	desiredVersion, err := provisioning.ComputeDesiredConfigVersion(hostLease.Spec)
+	desiredVersion, err := provisioning.ComputeDesiredConfigVersion(struct {
+		HostType                  string
+		ExternalHostID            string
+		ExternalHostName          string
+		HostClass                 string
+		NetworkClass              string
+		Selector                  v1alpha1.HostSelectorSpec
+		InventoryLabels           map[string]string
+		InventoryPersistentLabels map[string]string
+		TemplateID                string
+		TemplateParameters        string
+	}{
+		hostLease.Spec.HostType,
+		hostLease.Spec.ExternalHostID,
+		hostLease.Spec.ExternalHostName,
+		hostLease.Spec.HostClass,
+		hostLease.Spec.NetworkClass,
+		hostLease.Spec.Selector,
+		hostLease.Spec.InventoryLabels,
+		hostLease.Spec.InventoryPersistentLabels,
+		hostLease.Spec.TemplateID,
+		hostLease.Spec.TemplateParameters,
+	})
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to compute desired config version: %w", err)
 	}
